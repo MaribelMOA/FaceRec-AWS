@@ -1,4 +1,4 @@
-# FaceRec-AWS 👤📸🤖
+# FaceRec-AWS 👤📸
 
 Proyecto en .NET Web API para reconocimiento facial usando la cámara del sistema, detección con OpenCV y comparación/registro en AWS Rekognition. Las visitas se almacenan localmente en un archivo `visits.json`.
 
@@ -15,7 +15,7 @@ Proyecto en .NET Web API para reconocimiento facial usando la cámara del sistem
 
 ## 🛠 Requisitos previos
 
-- ✅ Tener instalada una versión reciente de .NET (6 o superior)
+- ✅ Tener instalada una versión reciente de .NET (8)
 - ✅ Cámara web disponible en la computadora con Windows
 - ✅ Cuenta de AWS con permisos para Rekognition (crear un IAM User con AwsRekognitionFullAccess)
 - ✅ Haber creado una colección facial en Rekognition con el nombre exacto:
@@ -32,9 +32,9 @@ Proyecto en .NET Web API para reconocimiento facial usando la cámara del sistem
 - ✅  Crear un archivo .env con las credenciales de AWS:
 
   ```bash
-AWS_ACCESS_KEY_ID=TU_ACCESS_KEY
-AWS_SECRET_ACCESS_KEY=TU_SECRET_KEY
-AWS_REGION=us-west-2
+  AWS_ACCESS_KEY_ID=TU_ACCESS_KEY
+  AWS_SECRET_ACCESS_KEY=TU_SECRET_KEY
+  AWS_REGION=us-west-2
   ```
 ---
 
@@ -42,16 +42,16 @@ AWS_REGION=us-west-2
 
 1. Clona este repositorio:
   ```bash
-git clone https://github.com/MaribelMOA/FaceRec-AWS.git
-cd FaceRec-AWS
+  git clone https://github.com/MaribelMOA/FaceRec-AWS.git
+  cd FaceRec-AWS
   ```
 2. Instala dependencias:
   ```bash
-dotnet add package OpenCvSharp4
-dotnet add package OpenCvSharp4.runtime.win
-dotnet add package AWSSDK.Rekognition
-dotnet add package Swashbuckle.AspNetCore
-dotnet add package DotNetEnv
+  dotnet add package OpenCvSharp4
+  dotnet add package OpenCvSharp4.runtime.win
+  dotnet add package AWSSDK.Rekognition
+  dotnet add package Swashbuckle.AspNetCore
+  dotnet add package DotNetEnv
   ```
 3. Construye el proyecto:
  ```bash
