@@ -43,22 +43,13 @@ Proyecto en .NET Web API para reconocimiento facial usando la cámara del sistem
 1. Clona este repositorio:
   ```bash
   git clone https://github.com/MaribelMOA/FaceRec-AWS.git
-  cd FaceRec-AWS
-  ```
-2. Instala dependencias:
-  ```bash
-  dotnet add package OpenCvSharp4
-  dotnet add package OpenCvSharp4.runtime.win
-  dotnet add package AWSSDK.Rekognition
-  dotnet add package Swashbuckle.AspNetCore
-  dotnet add package DotNetEnv
-  ```
-3. Construye el proyecto:
- ```bash
-dotnet build
-  ```
 
-4. Corre el servidor:
+  ```
+2. Construye el proyecto:
+  ```bash
+dotnet build FaceRec-AWS.sln
+  ```
+3. Corre el servidor:
 
  ```bash
 dotnet run
@@ -67,7 +58,7 @@ dotnet run
 
 ## 📌 Endpoints disponibles
 
-1. ## POST /api/FaceRecognition/capture-and-check
+1. ## POST http://localhost:5116/api/FaceRecognition/capture-and-check
 📸 Descripción:
 Captura una imagen desde la cámara conectada al servidor, detecta un rostro y lo envía a Amazon Rekognition para identificarlo o registrarlo si es nuevo.
 Verifica si esa persona ha sido registrada en las últimas 24 horas en el archivo visits.json.
@@ -118,7 +109,7 @@ curl -X 'POST' \
 - Si no hay coincidencia, lo registra como un nuevo rostro.
 - Verifica si ya registró una visita en las últimas 24 horas.
 
-2. ## POST /api/FaceRecognition/register-visit
+2. ## POST http://localhost:5116/api/FaceRecognition/register-visit
 📝 Descripción:
 Registra manualmente una visita usando faceId y externalImageId.
 Guarda la fecha y hora actual en el archivo visits.json.
