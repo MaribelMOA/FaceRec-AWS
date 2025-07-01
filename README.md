@@ -17,6 +17,7 @@ Proyecto en .NET Web API para reconocimiento facial usando la cámara del sistem
 
 - ✅ Tener instalada una versión reciente de .NET (8)
 - ✅ Cámara web disponible en la computadora con Windows
+- ✅ Asegurarse de que el puerto 5116 esté libre antes de iniciar la API. Este proyecto utiliza por defecto la URL: http://localhost:5116
 - ✅ Cuenta de AWS con permisos para Rekognition (crear un IAM User con AwsRekognitionFullAccess)
 - ✅ Haber creado una colección facial en Rekognition con el nombre exacto:
 
