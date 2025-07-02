@@ -120,6 +120,13 @@ public class FaceRecognitionController : ControllerBase
             v.ExternalImageId == externalId &&
             v.Timestamp >= since);
 
+            // Eliminar imagen temporal
+        if (System.IO.File.Exists(TempImagePath))
+        {
+            System.IO.File.Delete(TempImagePath);
+        }
+
+
         return Ok(new
         {
             allowed = !visitedRecently,
