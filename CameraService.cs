@@ -61,7 +61,18 @@ namespace FaceApi.Services
                     };
                 }
 
-                var faceMat = new Mat(frame, faces[0]);
+                var biggestFace = faces.OrderByDescending(r => r.Width * r.Height).FirstOrDefault();
+
+                if (biggestFace.Width == 0)
+                {
+                    return new CameraCaptureResult
+                    {
+                        Success = false,
+                        Message = "No face detected in image."
+                    };
+                }
+
+                var faceMat = new Mat(frame, biggestFace);
                 return new CameraCaptureResult
                 {
                     Success = true,
