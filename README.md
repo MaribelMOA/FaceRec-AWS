@@ -70,7 +70,6 @@ Verifica si esa persona ha sido registrada en las últimas 24 horas en el archiv
 📤 Ejemplo de uso:
 
  ```bash
-Copiar código
 curl -X 'POST' \
   'http://localhost:5116/api/FaceRecognition/capture-and-check' \
   -H 'accept: */*' \
@@ -145,3 +144,102 @@ curl -X 'POST' \
 ⚙️ Qué hace internamente:
 - Abre o crea visits.json.
 - Agrega un nuevo registro con la fecha y hora actuales.
+
+3. ## POST http://localhost:5116/api/FaceRecognition/check-and-register
+📸 Descripción:
+Captura una imagen desde la cámara conectada, verifica si el rostro ya está registrado en Amazon Rekognition y lo registra si es nuevo. Sin importar si ya visitó en las últimas 24 horas, guarda el registro de la visita en el archivo visits.json.
+
+📥 Parámetros:
+*Ninguno*
+
+📤 Ejemplo de uso:
+
+ ```bash
+curl -X 'POST' \
+  'http://localhost:5116/api/FaceRecognition/check-and-register' \
+  -H 'accept: */*' \
+  -d ''
+
+```
+✅ Respuesta si es la primera vez que vistia esa persona en las pasadas 24 h:
+
+ ```json
+{
+  "allowed": true,
+  "face_id": "abcd1234-face-id",
+  "external_image_id": "user123",
+ "visits_count": 1,
+  "registered": true
+}
+```
+✅ Respuesta si la persona ha visitado en las pasadas 24 h:
+
+ ```json
+{
+  "allowed": false,
+  "face_id": "abcd1234-face-id",
+  "external_image_id": "user123",
+  "visits_count": 2, //Numero mayor a 1
+  "registered": true
+}
+```
+❌ Respuesta si no se detecta rostro o ocurre error:
+
+ ```json
+{
+  "allowed": false,
+  "message": "No face detected."
+}
+```
+⚙️ Qué hace internamente:
+- Captura y guarda una imagen desde la cámara.
+- Utiliza AWS Rekognition para verificar si el rostro ya existe.
+- Si no existe, lo registra.
+- Agrega un nuevo registro de visita en visits.json con la fecha y hora actual.
+- Indica si el rostro había visitado en las últimas 24 horas.
+
+
+4. ## DELETE http://localhost:5116/api/FaceRecognition/delete-last-visit
+📝 Descripción:
+Elimina el último registro almacenado en el archivo visits.json. Útil para pruebas o corrección de errores.
+
+📥 Parámetros:
+*Ninguno*
+📤 Ejemplo de usoL:
+
+ ```bash
+curl -X 'DELETE' \
+  'http://localhost:5116/api/FaceRecognition/delete-last-visit' \
+  -H 'accept: */*'
+
+ ```
+✅ Respuesta:
+
+ ```json
+{
+  "success": true
+}
+ ```
+❌ Errores posibles:
+ - Si el archivo no existe:
+ ```json
+  {
+    "success": false,
+    "message": "visits.json file not found."
+  }
+```
+
+ - Si no hay visitas para eliminar:
+
+ ```json
+  {
+    "success": false,
+    "message": "No visits to delete."
+  }
+
+```
+
+⚙️ Qué hace internamente:
+- Carga el archivo visits.json.
+- Si existen visitas registradas, elimina la última.
+- Guarda el nuevo contenido en el mismo archivo
