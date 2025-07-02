@@ -125,7 +125,10 @@ public class FaceRecognitionController : ControllerBase
             allowed = !visitedRecently,
             face_id = faceId,
             external_image_id = externalId,
-            visits_count = visits.Count(v => v.FaceId == faceId && v.ExternalImageId == externalId)
+            visits_count = visits.Count(v =>
+                v.FaceId == faceId &&
+                v.ExternalImageId == externalId &&
+                v.Timestamp >= since),
         });
 
     }
