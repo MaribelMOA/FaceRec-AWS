@@ -31,6 +31,8 @@ public class FaceRecognitionController : ControllerBase
         _rekClient = new AmazonRekognitionClient(awsCredentials, Amazon.RegionEndpoint.GetBySystemName(Region));
     }
 
+
+    //1
     [HttpPost("capture-and-check")]
     public async Task<IActionResult> CaptureAndCheck()
     {
@@ -139,6 +141,7 @@ public class FaceRecognitionController : ControllerBase
         });
 
     }
+    //2
 
     [HttpPost("register-visit")]
     public IActionResult RegisterVisit([FromBody] VisitRecord model)
@@ -157,7 +160,7 @@ public class FaceRecognitionController : ControllerBase
         System.IO.File.WriteAllText(JsonPath, JsonSerializer.Serialize(visits));
         return Ok(new { success = true });
     }
-
+    //3
 
     [HttpPost("check-and-register")]
     public async Task<IActionResult> CheckAndRegisterVisit()
@@ -262,14 +265,15 @@ public class FaceRecognitionController : ControllerBase
             allowed = !visitedRecently,
             face_id = faceId,
             external_image_id = externalId,
-             visits_count = visits.Count(v =>
-            v.FaceId == faceId &&
-            v.ExternalImageId == externalId &&
-            v.Timestamp >= since),
+            visits_count = visits.Count(v =>
+           v.FaceId == faceId &&
+           v.ExternalImageId == externalId &&
+           v.Timestamp >= since),
             registered = true
         });
     }
-    
+    //4
+
     [HttpDelete("delete-last-visit")]
     public IActionResult DeleteLastVisit()
     {
@@ -291,6 +295,131 @@ public class FaceRecognitionController : ControllerBase
         return Ok(new
         {
             success = true
+        });
+    }
+
+    //5
+
+    [HttpGet("visits-on-date")]
+    public IActionResult GetVisitsByDate([FromQuery] DateTime? date)
+    {
+        if (!System.IO.File.Exists(JsonPath))
+        {
+            return NotFound(new { success = false, message = "visists.json file not found." });
+
+        }
+        DateTime targetDate = date.HasValue ? date.Value.Date : DateTime.Today;
+       
+
+        var visits = JsonSerializer.Deserialize<List<VisitRecord>>(System.IO.File.ReadAllText(JsonPath));
+       
+        if (visits == null || !visits.Any())
+        {
+            return Ok(new
+            {
+                success = true,
+                count = 0,
+                message = "No visits found for the specified date.",
+                date = targetDate.ToString("yyyy-MM-dd")
+            });
+        }
+
+        
+       var visitsOnDate = visits
+        .Where(v => v.Timestamp.Date == targetDate)
+        .ToList();
+       
+
+        var grouped = visits
+            .Where(v => v.Timestamp.Date == targetDate)
+            .GroupBy(v => new { v.FaceId, v.ExternalImageId })
+            .Select(g => new
+            {
+                face_id = g.Key.FaceId,
+                external_image_id = g.Key.ExternalImageId,
+                visit_count = g.Count()
+            })
+            .ToList();
+
+        return Ok(new
+        {
+            success = true,
+            total_visits = visitsOnDate.Count,
+            unique_visitors = grouped.Count,
+            details = grouped
+        });
+    }
+    //6
+    [HttpDelete("delete-visits-on-date")]
+    public IActionResult DeleteVisitsOnDate([FromQuery] DateTime? date)
+    {
+        if (!System.IO.File.Exists(JsonPath))
+        {
+            return NotFound(new { success = false, message = "visits.json file not found." }); ;
+
+        }
+
+        var visits = JsonSerializer.Deserialize<List<VisitRecord>>(System.IO.File.ReadAllText(JsonPath));
+        if (visits == null || !visits.Any())
+        {
+            return Ok(new { success = true, deleted = 0, message = "No visits to delete." });
+
+        }
+
+        DateTime targetDate = date.HasValue ? date.Value.Date : DateTime.Today;
+        int beforeCount = visits.Count;
+
+        visits = visits.Where(v => v.Timestamp.Date != targetDate).ToList();
+
+        int deletedCount = beforeCount - visits.Count;
+
+        System.IO.File.WriteAllText(JsonPath, JsonSerializer.Serialize(visits));
+        return Ok(new
+        {
+            success = true,
+            deleted = deletedCount,
+            date = targetDate.ToString("yyyy-MM-dd")
+        });
+
+    }
+    //7
+
+    [HttpDelete("delete-all-visits")]
+    public IActionResult DeleteAllVisits()
+    {
+        if (!System.IO.File.Exists(JsonPath))
+        {
+            return NotFound(new { success = false, message = "visits.json file not found." });
+        }
+        // Sobrescribe con lista vacía
+        System.IO.File.WriteAllText(JsonPath, JsonSerializer.Serialize(new List<VisitRecord>()));
+
+        return Ok(new
+        {
+            success = true,
+            message = "Todos los registros de visitas han sido eliminados."
+        });
+    }
+    //8
+    [HttpGet("get-all-visits")]
+    public IActionResult GetAllVisits()
+    {
+        if (!System.IO.File.Exists(JsonPath))
+        {
+            return NotFound(new { success = false, message = "visits.json file not found." });
+        }
+
+        var visits = JsonSerializer.Deserialize<List<VisitRecord>>(System.IO.File.ReadAllText(JsonPath));
+        if (visits == null || !visits.Any())
+        {
+            return Ok(new { success = true, count = 0, message = "No visits recorded" });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            count = visits.Count,
+            visits
         });
     }
 
