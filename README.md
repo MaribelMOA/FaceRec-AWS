@@ -198,14 +198,112 @@ curl -X 'POST' \
 - Agrega un nuevo registro de visita en visits.json con la fecha y hora actual.
 - Indica si el rostro había visitado en las últimas 24 horas.
 
+4. ## GET http://localhost:5116/api/FaceRecognition/get-all-visits
+📝 Descripción:
+Devuelve todas las visitas registradas en el archivo visits.json, sin importar la fecha. Útil para obtener el historial completo.
 
-4. ## DELETE http://localhost:5116/api/FaceRecognition/delete-last-visit
+📥 Parámetros:
+ *Ninguno*.
+📤 Ejemplo de uso:
+
+ ```bash
+curl -X 'GET' \
+  'http://localhost:5116/api/FaceRecognition/get-all-visits' \
+  -H 'accept: */*'
+ ```
+✅ Respuesta exitosa:
+
+ ```json
+  {
+    "success": true,
+    "count": 4,
+    "visits": [
+      {
+        "faceId": "abc123",
+        "externalImageId": "user1",
+        "timestamp": "2025-07-01T10:12:00"
+      },
+      {
+        "faceId": "xyz789",
+        "externalImageId": "user2",
+        "timestamp": "2025-07-01T12:45:00"
+      },
+      ...
+    ]
+  }
+
+ ```
+✅ Respuesta  si no hay visitas:
+
+ ```json
+  {
+  "success": true,
+  "count": 0,
+  "message": "No visits recorded"
+}
+ ```
+
+❌ Errores posibles:
+
+ ```json
+  {
+    "success": false,
+    "message": "visits.json file not found."
+  }
+
+```
+
+⚙️ Qué hace internamente:
+- Verifica si existe el archivo visits.json.
+- Si existe, lo deserializa y devuelve la lista completa de visitas.
+- Si no hay visitas o el archivo está vacío, devuelve un mensaje informativo con count = 0
+    - 
+5. ## DELETE http://localhost:5116/api/FaceRecognition/delete-all-visits
+📝 Descripción:
+Elimina todos los registros de visita del archivo visits.json.
+
+📥 Parámetros:
+*Ninguno* 
+📤 Ejemplo de uso:
+
+ ```bash
+curl -X 'DELETE' \
+  curl -X 'DELETE' \
+  'http://localhost:5116/api/FaceRecognition/delete-all-visits' \
+  -H 'accept: */*'
+
+ ```
+✅ Respuesta exitosa:
+
+ ```json
+  {
+    "success": true,
+    "message": "Todos los registros de visitas han sido eliminados."
+  }
+
+
+ ```
+❌ Errores posibles:
+
+ ```json
+  {
+    "success": false,
+    "message": "visits.json file not found."
+  }
+
+```
+
+⚙️ Qué hace internamente:
+- Verifica si existe el archivo visits.json.
+- Si existe, lo sobrescribe con una lista vacía ([]).
+
+6. ## DELETE http://localhost:5116/api/FaceRecognition/delete-last-visit
 📝 Descripción:
 Elimina el último registro almacenado en el archivo visits.json. Útil para pruebas o corrección de errores.
 
 📥 Parámetros:
 *Ninguno*
-📤 Ejemplo de usoL:
+📤 Ejemplo de uso:
 
  ```bash
 curl -X 'DELETE' \
@@ -243,3 +341,90 @@ curl -X 'DELETE' \
 - Carga el archivo visits.json.
 - Si existen visitas registradas, elimina la última.
 - Guarda el nuevo contenido en el mismo archivo
+
+
+
+7. ## DELETE http://localhost:5116/api/FaceRecognition/delete-visits-on-date
+📝 Descripción:
+Elimina todos los registros de visita correspondientes a una fecha específica (o a la fecha actual si no se indica).
+
+📥 Parámetros:
+- *date* (opcional): Fecha a consultar en formato YYYY-MM-DD. Si no se proporciona, se usa la fecha actual del servidor.
+📤 Ejemplo de uso:
+
+ ```bash
+curl -X 'DELETE' \
+  'http://localhost:5116/api/FaceRecognition/delete-visits-on-date?date=2025-07-02' \
+  -H 'accept: */*'
+ ```
+✅ Respuesta exitosa:
+
+ ```json
+ {
+    "success": true,
+    "deleted": 5,
+    "date": "2025-07-02"
+  }
+
+ ```
+❌ Errores posibles:
+ - Si no hay visitas:
+ ```json
+  {
+    "success": true,
+    "deleted": 0,
+    "message": "No visits to delete."
+  }
+```
+ - Si no existe el archivo::
+
+ ```json
+  {
+    "success": false,
+    "message": "visits.json file not found."
+  }
+```
+
+⚙️ Qué hace internamente:
+- Carga todas las visitas desde visits.json.
+- Elimina las que coinciden con la fecha especificada.
+- Sobrescribe el archivo con las visitas restantes.
+
+8. ## DELETE http://localhost:5116/api/FaceRecognition/delete-all-visits
+📝 Descripción:
+Elimina todos los registros de visita del archivo visits.json.
+
+📥 Parámetros:
+*Ninguno* 
+📤 Ejemplo de uso:
+
+ ```bash
+curl -X 'DELETE' \
+  curl -X 'DELETE' \
+  'http://localhost:5116/api/FaceRecognition/delete-all-visits' \
+  -H 'accept: */*'
+
+ ```
+✅ Respuesta exitosa:
+
+ ```json
+  {
+    "success": true,
+    "message": "Todos los registros de visitas han sido eliminados."
+  }
+
+
+ ```
+❌ Errores posibles:
+
+ ```json
+  {
+    "success": false,
+    "message": "visits.json file not found."
+  }
+
+```
+
+⚙️ Qué hace internamente:
+- Verifica si existe el archivo visits.json.
+- Si existe, lo sobrescribe con una lista vacía ([]).
