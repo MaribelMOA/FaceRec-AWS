@@ -33,7 +33,7 @@ public class FaceRecognitionController : ControllerBase
 
 
     //1
-    [HttpPost("capture-and-check")]
+     [HttpPost("capture-and-check")]
     public async Task<IActionResult> CaptureAndCheck()
     {
         // 1. Capturar imagen de la cámara
@@ -56,11 +56,20 @@ public class FaceRecognitionController : ControllerBase
             });
         }
 
-        // Guardar y convertir imagen para AWS Rekognition
-        Cv2.ImWrite(TempImagePath, result.FaceImage);
-        var imageBytes = await System.IO.File.ReadAllBytesAsync(TempImagePath);
+         // 2. Crear nombre único y ruta de imagen
+        string imageFileName = $"face_{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid().ToString().Substring(0, 8)}.jpg";
+        string tempFolder = Path.Combine(Directory.GetCurrentDirectory(), "temp-images");
 
-        // 2. Rekognition
+        if (!Directory.Exists(tempFolder))
+            Directory.CreateDirectory(tempFolder);
+
+        string imagePath = Path.Combine(tempFolder, imageFileName);
+
+        // Guardar imagen
+        Cv2.ImWrite(imagePath, result.FaceImage);
+        var imageBytes = await System.IO.File.ReadAllBytesAsync(imagePath);
+        
+        // 3. AWS Rekognition
         SearchFacesByImageResponse search;
         try
         {
@@ -90,7 +99,7 @@ public class FaceRecognitionController : ControllerBase
             });
         }
 
-
+        //4. Obtain IDs
         string faceId, externalId;
 
         if (search.FaceMatches.Count == 0)
@@ -111,7 +120,7 @@ public class FaceRecognitionController : ControllerBase
             externalId = match.Face.ExternalImageId;
         }
 
-        // 3. Revisar historial
+        // 5. Revisar historial
         var visits = System.IO.File.Exists(JsonPath)
             ? JsonSerializer.Deserialize<List<VisitRecord>>(System.IO.File.ReadAllText(JsonPath))
             : new List<VisitRecord>();
@@ -122,11 +131,7 @@ public class FaceRecognitionController : ControllerBase
             v.ExternalImageId == externalId &&
             v.Timestamp >= since);
 
-        // Eliminar imagen temporal
-        // if (System.IO.File.Exists(TempImagePath))
-        // {
-        //     System.IO.File.Delete(TempImagePath);
-        // }
+        
 
 
         return Ok(new
@@ -138,6 +143,7 @@ public class FaceRecognitionController : ControllerBase
                 v.FaceId == faceId &&
                 v.ExternalImageId == externalId &&
                 v.Timestamp >= since),
+            image_path = imagePath
         });
 
     }
