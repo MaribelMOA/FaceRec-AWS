@@ -192,14 +192,13 @@ public class FaceRecognitionController : ControllerBase
         // Eliminar archivo temporal local
         System.IO.File.Delete(tempFilePath);
 
-
         return Ok(new { success = true, imageUrl });
     }
 
-    [HttpDelete("delete-tempImage/{fileName}")]
-    public async Task<IActionResult>DeleteTempFile(string tempFileName)
+    [HttpDelete("delete-tempImage/{tempFileName}")]
+    public IActionResult DeleteTempFile(string tempFileName)
     {
-        string tempFolder = Path.Combine(Directory.GetCurrentDirectory(), "temp-images"); // ⚠️ ¡igual que donde la creaste!
+        string tempFolder = Path.Combine(Directory.GetCurrentDirectory(), "temp-images"); 
         string tempFilePath = Path.Combine(tempFolder, tempFileName);
         
         if (!System.IO.File.Exists(tempFilePath)){
