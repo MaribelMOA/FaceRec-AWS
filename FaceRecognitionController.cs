@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using OpenCvSharp;
 using System.Text.Json;
 
+using Amazon.S3;
+using Amazon.S3.Model;
+
 using FaceApi.Models;
 using FaceApi.Services;
 
@@ -19,10 +22,12 @@ public class FaceRecognitionController : ControllerBase
 
     private readonly CameraService _cameraService;
     private readonly AmazonRekognitionClient _rekClient;
+    private readonly IStorageService _storageService;
 
-    public FaceRecognitionController(CameraService cameraService)
+    public FaceRecognitionController(CameraService cameraService, IStorageService storageService)
     {
         _cameraService = cameraService;
+        _storageService = storageService;
 
         var accessKey = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY");
         var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_KEY");
@@ -131,9 +136,6 @@ public class FaceRecognitionController : ControllerBase
             v.ExternalImageId == externalId &&
             v.Timestamp >= since);
 
-        
-
-
         return Ok(new
         {
             allowed = !visitedRecently,
@@ -164,8 +166,88 @@ public class FaceRecognitionController : ControllerBase
         });
 
         System.IO.File.WriteAllText(JsonPath, JsonSerializer.Serialize(visits));
+  
+
         return Ok(new { success = true });
     }
+
+    [HttpPost("register-image")]
+    public async Task<IActionResult> RegisterVisit(String tempFileName, String realFileName)
+    {
+        // Subir imagen temporal a S3
+        string tempFolder = Path.Combine(Directory.GetCurrentDirectory(), "temp-images");
+        string tempFilePath = Path.Combine(tempFolder, tempFileName);
+        
+        if (!System.IO.File.Exists(tempFilePath))
+        {
+            return NotFound(new { success = false, message = "Temp image not found" });
+        }
+
+        string finalFileName = string.IsNullOrWhiteSpace(realFileName)
+            ? $"visitas/{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid().ToString().Substring(0, 8)}.jpg"
+            : $"visitas/{realFileName}_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
+
+        string imageUrl = await _storageService.UploadFileAsync(tempFilePath, finalFileName);
+
+        // Eliminar archivo temporal local
+        System.IO.File.Delete(tempFilePath);
+
+
+        return Ok(new { success = true, imageUrl });
+    }
+
+    [HttpDelete("delete-tempImage/{fileName}")]
+    public async Task<IActionResult>DeleteTempFile(string tempFileName)
+    {
+        string tempFolder = Path.Combine(Directory.GetCurrentDirectory(), "temp-images"); // ⚠️ ¡igual que donde la creaste!
+        string tempFilePath = Path.Combine(tempFolder, tempFileName);
+        
+        if (!System.IO.File.Exists(tempFilePath)){
+            return NotFound(new { success = false, message = "Temp image not found" });
+        }else{
+            System.IO.File.Delete(tempFilePath);
+            return NotFound(new { success = true, message = "Temp image deleted succesfully" });
+        }
+    }
+
+
+
+    [HttpGet("get-image")]
+    public async Task<IActionResult> GetImage([FromQuery] string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return BadRequest(new { success = false, message =" Must provide filename." });
+        }
+
+        string keyToLookup;
+
+        // Si ya viene con fecha y extensión
+        if (fileName.EndsWith(".jpg") && fileName.Contains("_"))
+        {
+            keyToLookup = $"visitas/{fileName}";
+        }
+        else
+        {
+            // Buscar la imagen más reciente con ese prefijo
+            var resolvedKey = await _storageService.FindFileByPrefixAsync(fileName);
+            if (resolvedKey == null)
+            {
+                return NotFound(new { success = false, message = "No image found with that name." });
+            }
+            keyToLookup = resolvedKey;
+        }
+
+        string url = await _storageService.GetFileUrlAsync(keyToLookup);
+        return Ok(new { success = true, url });
+    }
+
+
+
+
+
+
+
     //3
 
     [HttpPost("check-and-register")]
