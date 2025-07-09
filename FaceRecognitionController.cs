@@ -241,6 +241,60 @@ public class FaceRecognitionController : ControllerBase
         return Ok(new { success = true, url });
     }
 
+    [HttpDelete("delete-image/{fileName}")]
+    public async Task<IActionResult> DeleteImage(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            return BadRequest(new { success = false, message = "You must provide a file name" });
+
+        string keyToDelete;
+
+        // Si ya viene con fecha y extensión
+        if (fileName.EndsWith(".jpg") && fileName.Contains("_"))
+        {
+            keyToDelete = $"visitas/{fileName}";
+        }
+        else
+        {
+            // Buscar el archivo más reciente con ese prefijo
+            var resolvedKey = await _storageService.FindFileByPrefixAsync(fileName);
+            if (resolvedKey == null)
+                return NotFound(new { success = false, message = "No image found with that name." });
+
+            keyToDelete = resolvedKey;
+        }
+
+        var deleted = await _storageService.DeleteFileAsync(keyToDelete);
+
+        if (!deleted)
+            return NotFound(new { success = false, message = "No se pudo borrar el archivo o no existe." });
+
+        return Ok(new { success = true, message = $"Imagen '{keyToDelete}' eliminada exitosamente." });
+    }
+
+    [HttpGet("images-by-date")]
+    public async Task<IActionResult> GetImagesByDate([FromQuery] string date)
+    {
+        if (string.IsNullOrWhiteSpace(date))
+        {
+            return BadRequest(new { success = false, message = "Debe proporcionar una fecha (formato: yyyyMMdd)." });
+        }
+
+        var urls = await _storageService.GetFilesByKeywordAsync(date);
+
+        if (urls.Count == 0)
+        {
+            return NotFound(new { success = false, message = "No se encontraron imágenes para esa fecha." });
+        }
+
+        return Ok(new { success = true, count = urls.Count, images = urls });
+    }
+
+
+
+
+
+
 
 
 

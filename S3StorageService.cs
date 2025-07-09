@@ -40,11 +40,7 @@ public class S3StorageService: IStorageService
         return _s3Client.GetPreSignedURL(request);
     }
 
-    public void DeleteTempFile(string localFilePath)
-    {
-        if (File.Exists(localFilePath))
-            File.Delete(localFilePath);
-    }
+ 
 
     public async Task<string?> FindFileByPrefixAsync(string prefix)
     {
@@ -63,5 +59,69 @@ public class S3StorageService: IStorageService
 
         return match?.Key; // Puede ser null si no hay coincidencias
     }
+
+    public async Task<bool> DeleteFileAsync(string keyName)
+    {
+        try
+        {
+            var request = new DeleteObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = keyName
+            };
+
+            var response = await _s3Client.DeleteObjectAsync(request);
+
+            return response.HttpStatusCode == System.Net.HttpStatusCode.NoContent
+                || response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
+        catch (AmazonS3Exception)
+        {
+            return false; // No se pudo borrar (por ejemplo, no existe)
+        }
+    }
+
+    public async Task<List<string>> GetFilesByKeywordAsync(string keyword)
+    {
+        var matchingKeys = new List<string>();
+
+        var request = new ListObjectsV2Request
+        {
+            BucketName = _bucketName,
+            Prefix = "visitas/"
+        };
+
+        ListObjectsV2Response response;
+        do
+        {
+            response = await _s3Client.ListObjectsV2Async(request);
+
+            foreach (var s3Object in response.S3Objects)
+            {
+                if (s3Object.Key.Contains(keyword))
+                {
+                    // Agrega la URL firmada (válida por 1 hora)
+                    var url = _s3Client.GetPreSignedURL(new GetPreSignedUrlRequest
+                    {
+                        BucketName = _bucketName,
+                        Key = s3Object.Key,
+                        Expires = DateTime.UtcNow.AddHours(1)
+                    });
+
+                    matchingKeys.Add(url);
+                }
+            }
+
+            request.ContinuationToken = response.NextContinuationToken;
+
+        } while (response.IsTruncated);
+
+        return matchingKeys;
+    }
+
+
+
+
+
 
 }
