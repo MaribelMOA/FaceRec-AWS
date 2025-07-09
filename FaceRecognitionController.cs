@@ -170,6 +170,7 @@ public class FaceRecognitionController : ControllerBase
 
         return Ok(new { success = true });
     }
+    //3
 
     [HttpPost("register-image")]
     public async Task<IActionResult> RegisterVisit(String tempFileName, String realFileName)
@@ -194,7 +195,7 @@ public class FaceRecognitionController : ControllerBase
 
         return Ok(new { success = true, imageUrl });
     }
-
+    //4
     [HttpDelete("delete-tempImage/{tempFileName}")]
     public IActionResult DeleteTempFile(string tempFileName)
     {
@@ -210,7 +211,7 @@ public class FaceRecognitionController : ControllerBase
     }
 
 
-
+        //5
     [HttpGet("get-image")]
     public async Task<IActionResult> GetImage([FromQuery] string fileName)
     {
@@ -241,6 +242,7 @@ public class FaceRecognitionController : ControllerBase
         return Ok(new { success = true, url });
     }
 
+    //6
     [HttpDelete("delete-image/{fileName}")]
     public async Task<IActionResult> DeleteImage(string fileName)
     {
@@ -271,6 +273,7 @@ public class FaceRecognitionController : ControllerBase
 
         return Ok(new { success = true, message = $"Imagen '{keyToDelete}' eliminada exitosamente." });
     }
+    //7
 
     [HttpGet("images-by-date")]
     public async Task<IActionResult> GetImagesByDate([FromQuery] string date)
@@ -298,7 +301,8 @@ public class FaceRecognitionController : ControllerBase
 
 
 
-
+//////////////////////////////////////////////////////////////////////////////////////////
+//NO LONGER IMPORTANT, BUT LEFT JUST IN CASE
 
 
     //3
@@ -439,108 +443,8 @@ public class FaceRecognitionController : ControllerBase
         });
     }
 
-    //5
+   
 
-    [HttpGet("visits-on-date")]
-    public IActionResult GetVisitsByDate([FromQuery] DateTime? date)
-    {
-        if (!System.IO.File.Exists(JsonPath))
-        {
-            return NotFound(new { success = false, message = "visists.json file not found." });
-
-        }
-        DateTime targetDate = date.HasValue ? date.Value.Date : DateTime.Today;
-       
-
-        var visits = JsonSerializer.Deserialize<List<VisitRecord>>(System.IO.File.ReadAllText(JsonPath));
-       
-        if (visits == null || !visits.Any())
-        {
-            return Ok(new
-            {
-                success = true,
-                count = 0,
-                message = "No visits found for the specified date.",
-                date = targetDate.ToString("yyyy-MM-dd")
-            });
-        }
-
-        
-       var visitsOnDate = visits
-        .Where(v => v.Timestamp.Date == targetDate)
-        .ToList();
-       
-
-        var grouped = visits
-            .Where(v => v.Timestamp.Date == targetDate)
-            .GroupBy(v => new { v.FaceId, v.ExternalImageId })
-            .Select(g => new
-            {
-                face_id = g.Key.FaceId,
-                external_image_id = g.Key.ExternalImageId,
-                visit_count = g.Count()
-            })
-            .ToList();
-
-        return Ok(new
-        {
-            success = true,
-            total_visits = visitsOnDate.Count,
-            unique_visitors = grouped.Count,
-            details = grouped
-        });
-    }
-    //6
-    [HttpDelete("delete-visits-on-date")]
-    public IActionResult DeleteVisitsOnDate([FromQuery] DateTime? date)
-    {
-        if (!System.IO.File.Exists(JsonPath))
-        {
-            return NotFound(new { success = false, message = "visits.json file not found." }); ;
-
-        }
-
-        var visits = JsonSerializer.Deserialize<List<VisitRecord>>(System.IO.File.ReadAllText(JsonPath));
-        if (visits == null || !visits.Any())
-        {
-            return Ok(new { success = true, deleted = 0, message = "No visits to delete." });
-
-        }
-
-        DateTime targetDate = date.HasValue ? date.Value.Date : DateTime.Today;
-        int beforeCount = visits.Count;
-
-        visits = visits.Where(v => v.Timestamp.Date != targetDate).ToList();
-
-        int deletedCount = beforeCount - visits.Count;
-
-        System.IO.File.WriteAllText(JsonPath, JsonSerializer.Serialize(visits));
-        return Ok(new
-        {
-            success = true,
-            deleted = deletedCount,
-            date = targetDate.ToString("yyyy-MM-dd")
-        });
-
-    }
-    //7
-
-    [HttpDelete("delete-all-visits")]
-    public IActionResult DeleteAllVisits()
-    {
-        if (!System.IO.File.Exists(JsonPath))
-        {
-            return NotFound(new { success = false, message = "visits.json file not found." });
-        }
-        // Sobrescribe con lista vacía
-        System.IO.File.WriteAllText(JsonPath, JsonSerializer.Serialize(new List<VisitRecord>()));
-
-        return Ok(new
-        {
-            success = true,
-            message = "Todos los registros de visitas han sido eliminados."
-        });
-    }
     //8
     [HttpGet("get-all-visits")]
     public IActionResult GetAllVisits()

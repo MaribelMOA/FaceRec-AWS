@@ -95,6 +95,10 @@ public class S3StorageService: IStorageService
         do
         {
             response = await _s3Client.ListObjectsV2Async(request);
+            //$0.005 por cada 1,000 solicitudes LIST.
+            //Si tienes 5,000 archivos y haces 1 consulta, el sistema hace 5 solicitudes LIST →
+            //$0.005 × 5 = $0.025 por esa búsqueda.
+
 
             foreach (var s3Object in response.S3Objects)
             {
@@ -114,7 +118,7 @@ public class S3StorageService: IStorageService
 
             request.ContinuationToken = response.NextContinuationToken;
 
-        } while (response.IsTruncated);
+        } while (response.IsTruncated == true);
 
         return matchingKeys;
     }
