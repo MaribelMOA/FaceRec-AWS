@@ -57,6 +57,70 @@ dotnet run
   ```
 ---
 
+---
+
+## 🔄 Cambiar el proveedor de almacenamiento (AWS S3 / Google Cloud /Otro)
+
+Este proyecto permite usar **Amazon S3** o **Google Cloud Storage** como sistema de almacenamiento para las imágenes capturadas.  Puedes alternar entre ambos de forma sencilla, o incluso extenderlo para usar cualquier otro sistema como Azure Blob Storage, Firebase Storage, etc.
+
+### 🔧 Paso 1: Define las variables en tu archivo `.env`
+
+#### ✅ Para usar **AWS S3**, incluye:
+
+```bash
+  AWS_ACCESS_KEY=tu_access_key
+  AWS_SECRET_KEY=tu_secret_key
+  AWS_REGION=us-west-2
+```
+#### ✅ Para usar **Google Cloud Storage**, incluye:
+
+```bash
+  GC_PROJECT_ID=tu_project_id
+  GC_CLIENT_EMAIL=servicio@tu-proyecto.iam.gserviceaccount.com
+  GC_CLIENT_ID=xxxxxxxxxxxxxxx
+  GC_PRIVATE_KEY_ID=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  GC_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\nABC123...\\n-----END PRIVATE KEY-----\\n"
+  GC_CLIENT_CERT_URL=https://www.googleapis.com/robot/v1/metadata/x509/...
+
+```
+
+🔐 Importante: La clave privada (GC_PRIVATE_KEY) debe colocarse como una sola línea entre comillas dobles y con los saltos de línea escapados (\\n).
+
+### 🧩 Paso 2: Cambia la implementación de  `IStorageService` en `Program.cs`
+Abre el archivo *Program.cs* y registra el proveedor deseado:
+
+#### ➕ Para usar **AWS S3**:
+
+```csharp
+  builder.Services.AddSingleton<IStorageService, S3StorageService>();
+```
+#### ➕ Para usar **Google Cloud Storage**:
+
+```csharp
+  builder.Services.AddSingleton<IStorageService, GcpStorageService>();
+```
+---
+### 🧱 ¿Quieres usar otro proveedor de almacenamiento?
+El proyecto está diseñado para ser extensible. Solo necesitas:
+
+1. Crear una nueva clase (por ejemplo, AzureBlobStorageService.cs).
+2. Hacer que implemente la interfaz IStorageService.
+3. Implementar los métodos:
+      - UploadFileAsync
+      - GetFileUrlAsync
+      - FindFileByPrefixAsync
+      - DeleteFileAsync
+      - GetFilesByKeywordAsync
+4. Registrar tu nueva clase en Program.c
+
+
+```csharp
+  builder.Services.AddSingleton<IStorageService, AzureBlobStorageService>();
+
+```
+Esto permite adaptar fácilmente el sistema a cualquier backend de almacenamiento que necesites sin modificar el resto del código.
+
+---
 ## 📌 Endpoints disponibles
 
 1. ## POST http://localhost:5116/api/FaceRecognition/capture-and-check
