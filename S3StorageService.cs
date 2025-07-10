@@ -30,14 +30,39 @@ public class S3StorageService: IStorageService
 
     public async Task<string> GetFileUrlAsync(string keyName)
     {
-        var request = new GetPreSignedUrlRequest
+        try
         {
-            BucketName = _bucketName,
-            Key = keyName,
-            Expires = DateTime.UtcNow.AddMinutes(60)
-        };
+            // Verificar si el archivo existe
+            var metadata = await _s3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest
+            {
+                BucketName = _bucketName,
+                Key = keyName
+            });
+            //usar GetObjectMetadataAsync() genera una solicitud HEAD a S3
+            //$0.0004 por cada 1,000 solicitudes (equivale a $0.40 USD por 1,000,000 de solicitudes)
 
-        return _s3Client.GetPreSignedURL(request);
+            // Si existe, generar la URL firmada
+            var request = new GetPreSignedUrlRequest
+            {
+                BucketName = _bucketName,
+                Key = keyName,
+                Expires = DateTime.UtcNow.AddMinutes(60)
+            };
+
+            return _s3Client.GetPreSignedURL(request);
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null; // El archivo no existe
+        }
+        // var request = new GetPreSignedUrlRequest
+        // {
+        //     BucketName = _bucketName,
+        //     Key = keyName,
+        //     Expires = DateTime.UtcNow.AddMinutes(60)
+        // };
+
+        // return _s3Client.GetPreSignedURL(request);
     }
 
  
@@ -64,22 +89,41 @@ public class S3StorageService: IStorageService
     {
         try
         {
-            var request = new DeleteObjectRequest
+            // Verificamos si el archivo existe en S3 usando HEAD (barato y eficiente)
+            // var metadataRequest = new GetObjectMetadataRequest
+            // {
+            //     BucketName = _bucketName,
+            //     Key = keyName
+            // };
+
+          //  await _s3Client.GetObjectMetadataAsync(metadataRequest); // lanza excepción si no existe
+
+            // Si existe, procedemos a eliminarlo
+            var deleteRequest = new DeleteObjectRequest
             {
                 BucketName = _bucketName,
                 Key = keyName
             };
 
-            var response = await _s3Client.DeleteObjectAsync(request);
+            var response = await _s3Client.DeleteObjectAsync(deleteRequest);
 
             return response.HttpStatusCode == System.Net.HttpStatusCode.NoContent
                 || response.HttpStatusCode == System.Net.HttpStatusCode.OK;
         }
-        catch (AmazonS3Exception)
+        catch (AmazonS3Exception ex)
         {
-            return false; // No se pudo borrar (por ejemplo, no existe)
+            // if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            // {
+            //     // No existe el archivo
+            //     return false;
+            // }
+
+            // Otro error de AWS
+            Console.WriteLine($"Error de S3 al intentar eliminar: {ex.Message}");
+            return false;
         }
     }
+
 
     public async Task<List<string>> GetFilesByKeywordAsync(string keyword)
     {
@@ -123,9 +167,5 @@ public class S3StorageService: IStorageService
         return matchingKeys;
     }
 
-
-
-
-
-
 }
+

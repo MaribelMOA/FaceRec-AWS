@@ -220,9 +220,9 @@ public class FaceRecognitionController : ControllerBase
             return BadRequest(new { success = false, message =" Must provide filename." });
         }
 
-        string keyToLookup;
+        string keyToLookup;// = $"visitas/{fileName}";;
 
-        // Si ya viene con fecha y extensión
+       // Si ya viene con fecha y extensión
         if (fileName.EndsWith(".jpg") && fileName.Contains("_"))
         {
             keyToLookup = $"visitas/{fileName}";
@@ -239,7 +239,12 @@ public class FaceRecognitionController : ControllerBase
         }
 
         string url = await _storageService.GetFileUrlAsync(keyToLookup);
-        return Ok(new { success = true, url });
+        if (url == null){
+             return NotFound(new { success = false, message = $"No image found with key ' {keyToLookup}'." });
+        }
+           
+
+         return Ok(new { success = true, url });
     }
 
     //6
@@ -249,27 +254,31 @@ public class FaceRecognitionController : ControllerBase
         if (string.IsNullOrWhiteSpace(fileName))
             return BadRequest(new { success = false, message = "You must provide a file name" });
 
-        string keyToDelete;
+       // string keyToDelete;
+        string keyToDelete = $"visitas/{fileName}";
 
         // Si ya viene con fecha y extensión
-        if (fileName.EndsWith(".jpg") && fileName.Contains("_"))
-        {
-            keyToDelete = $"visitas/{fileName}";
-        }
-        else
-        {
-            // Buscar el archivo más reciente con ese prefijo
-            var resolvedKey = await _storageService.FindFileByPrefixAsync(fileName);
-            if (resolvedKey == null)
-                return NotFound(new { success = false, message = "No image found with that name." });
+        // if (fileName.EndsWith(".jpg") && fileName.Contains("_"))
+        // {
+        //     keyToDelete = $"visitas/{fileName}";
+        // }
+        // else
+        // {
+        //     // Buscar el archivo más reciente con ese prefijo
+        //     var resolvedKey = await _storageService.FindFileByPrefixAsync(fileName);
+        //     if (resolvedKey == null)
+        //         return NotFound(new { success = false, message = "No image found with that name." });
 
-            keyToDelete = resolvedKey;
-        }
+        //     keyToDelete = resolvedKey;
+        // }
 
-        var deleted = await _storageService.DeleteFileAsync(keyToDelete);
+        Console.WriteLine($"Attempting delete on key: {keyToDelete}");
+        bool deleted = await _storageService.DeleteFileAsync(keyToDelete);
+        Console.WriteLine($"Delete result: {deleted}");
+
 
         if (!deleted)
-            return NotFound(new { success = false, message = "No se pudo borrar el archivo o no existe." });
+            return NotFound(new { success = false, message = $"Could not delete '{keyToDelete}' or it does not exist."  });
 
         return Ok(new { success = true, message = $"Imagen '{keyToDelete}' eliminada exitosamente." });
     }
