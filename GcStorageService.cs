@@ -16,8 +16,8 @@ public class GcStorageService : IStorageService
     public GcStorageService(IConfiguration configuration)
     {
         // Se espera que esté configurado en appsettings o en env variables
-        _bucketName = "facerecognition-visitas-maribel-gcs";
-
+        _bucketName = Environment.GetEnvironmentVariable("BUCKET_GC");
+       
         var privateKeyRaw = Environment.GetEnvironmentVariable("GC_PRIVATE_KEY");
         var privateKey = privateKeyRaw?.Replace("\\n", "\n");
 

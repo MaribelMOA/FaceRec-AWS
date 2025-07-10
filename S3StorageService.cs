@@ -9,8 +9,8 @@ public class S3StorageService: IStorageService
 
     public S3StorageService(IConfiguration configuration)
     {
-        _bucketName = "facerecognition-visitas-maribel";
-
+        _bucketName = Environment.GetEnvironmentVariable("BUCKET_AWS");
+       
         var accessKey = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY");
         var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_KEY");
 
