@@ -144,10 +144,8 @@ curl -X 'POST' \
 
  ```json
 {
-  "allowed": true,
   "face_id": "abcd1234-face-id",
   "external_image_id": "user123",
-  "visits_count": 0,
   "image_file_path":"face_20250709_123629_3c8de419.jpg"
 }
 ```
@@ -155,10 +153,8 @@ curl -X 'POST' \
 
  ```json
 {
-  "allowed": false,
   "face_id": "abcd1234-face-id",
   "external_image_id": "user123",
-  "visits_count": 1,
   "image_file_path":"face_20250709_123629_3c8de419.jpg"
 }
 ```
