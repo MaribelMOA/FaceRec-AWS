@@ -126,25 +126,21 @@ public class FaceRecognitionController : ControllerBase
         }
 
         // 5. Revisar historial
-        var visits = System.IO.File.Exists(JsonPath)
-            ? JsonSerializer.Deserialize<List<VisitRecord>>(System.IO.File.ReadAllText(JsonPath))
-            : new List<VisitRecord>();
+        // var visits = System.IO.File.Exists(JsonPath)
+        //     ? JsonSerializer.Deserialize<List<VisitRecord>>(System.IO.File.ReadAllText(JsonPath))
+        //     : new List<VisitRecord>();
 
-        var since = DateTime.Now.AddHours(-24);
-        var visitedRecently = visits.Any(v =>
-            v.FaceId == faceId &&
-            v.ExternalImageId == externalId &&
-            v.Timestamp >= since);
+        // var since = DateTime.Now.AddHours(-24);
+        // var visitedRecently = visits.Any(v =>
+        //     v.FaceId == faceId &&
+        //     v.ExternalImageId == externalId &&
+        //     v.Timestamp >= since);
+        
 
         return Ok(new
         {
-            allowed = !visitedRecently,
             face_id = faceId,
             external_image_id = externalId,
-            visits_count = visits.Count(v =>
-                v.FaceId == faceId &&
-                v.ExternalImageId == externalId &&
-                v.Timestamp >= since),
             image_file_path = imageFileName
         });
 
