@@ -147,7 +147,8 @@ curl -X 'POST' \
   "allowed": true,
   "face_id": "abcd1234-face-id",
   "external_image_id": "user123",
-  "visits_count": 0
+  "visits_count": 0,
+  "image_file_path":"face_20250709_123629_3c8de419.jpg"
 }
 ```
 ✅ Respuesta si la persona ha visitado en las pasadas 24 h:
@@ -157,7 +158,8 @@ curl -X 'POST' \
   "allowed": false,
   "face_id": "abcd1234-face-id",
   "external_image_id": "user123",
-  "visits_count": 1
+  "visits_count": 1,
+  "image_file_path":"face_20250709_123629_3c8de419.jpg"
 }
 ```
 ❌ Respuesta si no se detecta rostro o ocurre error:

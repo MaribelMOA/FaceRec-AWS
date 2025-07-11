@@ -145,7 +145,7 @@ public class FaceRecognitionController : ControllerBase
                 v.FaceId == faceId &&
                 v.ExternalImageId == externalId &&
                 v.Timestamp >= since),
-            image_path = imagePath
+            image_file_path = imageFileName
         });
 
     }
