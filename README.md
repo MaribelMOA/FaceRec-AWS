@@ -148,6 +148,7 @@ curl -X 'POST' \
   "face_id": "abcd1234-face-id",
   "external_image_id": "user123",
   "visits_count": 0
+  "image_path": "C:\\Users\\Admin\\Documents\\Test-FaceRec\\FaceRec-AWS\\temp-images\\face_20250709_124000_b0bb6951.jpg"
 }
 ```
 ✅ Respuesta si la persona ha visitado en las pasadas 24 h:
