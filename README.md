@@ -57,6 +57,70 @@ dotnet run
   ```
 ---
 
+---
+
+## 🔄 Cambiar el proveedor de almacenamiento (AWS S3 / Google Cloud /Otro)
+
+Este proyecto permite usar **Amazon S3** o **Google Cloud Storage** como sistema de almacenamiento para las imágenes capturadas.  Puedes alternar entre ambos de forma sencilla, o incluso extenderlo para usar cualquier otro sistema como Azure Blob Storage, Firebase Storage, etc.
+
+### 🔧 Paso 1: Define las variables en tu archivo `.env`
+
+#### ✅ Para usar **AWS S3**, incluye:
+
+```bash
+  AWS_ACCESS_KEY=tu_access_key
+  AWS_SECRET_KEY=tu_secret_key
+  AWS_REGION=us-west-2
+```
+#### ✅ Para usar **Google Cloud Storage**, incluye:
+
+```bash
+  GC_PROJECT_ID=tu_project_id
+  GC_CLIENT_EMAIL=servicio@tu-proyecto.iam.gserviceaccount.com
+  GC_CLIENT_ID=xxxxxxxxxxxxxxx
+  GC_PRIVATE_KEY_ID=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  GC_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\nABC123...\\n-----END PRIVATE KEY-----\\n"
+  GC_CLIENT_CERT_URL=https://www.googleapis.com/robot/v1/metadata/x509/...
+
+```
+
+🔐 Importante: La clave privada (GC_PRIVATE_KEY) debe colocarse como una sola línea entre comillas dobles y con los saltos de línea escapados (\\n).
+
+### 🧩 Paso 2: Cambia la implementación de  `IStorageService` en `Program.cs`
+Abre el archivo *Program.cs* y registra el proveedor deseado:
+
+#### ➕ Para usar **AWS S3**:
+
+```csharp
+  builder.Services.AddSingleton<IStorageService, S3StorageService>();
+```
+#### ➕ Para usar **Google Cloud Storage**:
+
+```csharp
+  builder.Services.AddSingleton<IStorageService, GcpStorageService>();
+```
+---
+### 🧱 ¿Quieres usar otro proveedor de almacenamiento?
+El proyecto está diseñado para ser extensible. Solo necesitas:
+
+1. Crear una nueva clase (por ejemplo, AzureBlobStorageService.cs).
+2. Hacer que implemente la interfaz IStorageService.
+3. Implementar los métodos:
+      - UploadFileAsync
+      - GetFileUrlAsync
+      - FindFileByPrefixAsync
+      - DeleteFileAsync
+      - GetFilesByKeywordAsync
+4. Registrar tu nueva clase en Program.c
+
+
+```csharp
+  builder.Services.AddSingleton<IStorageService, AzureBlobStorageService>();
+
+```
+Esto permite adaptar fácilmente el sistema a cualquier backend de almacenamiento que necesites sin modificar el resto del código.
+
+---
 ## 📌 Endpoints disponibles
 
 1. ## POST http://localhost:5116/api/FaceRecognition/capture-and-check
@@ -79,20 +143,18 @@ curl -X 'POST' \
 
  ```json
 {
-  "allowed": true,
   "face_id": "abcd1234-face-id",
   "external_image_id": "user123",
-  "visits_count": 0
+  "image_file_path":"face_20250709_123629_3c8de419.jpg"
 }
 ```
 ✅ Respuesta si la persona ha visitado en las pasadas 24 h:
 
  ```json
 {
-  "allowed": false,
   "face_id": "abcd1234-face-id",
   "external_image_id": "user123",
-  "visits_count": 1
+  "image_file_path":"face_20250709_123629_3c8de419.jpg"
 }
 ```
 ❌ Respuesta si no se detecta rostro o ocurre error:
@@ -145,312 +207,8 @@ curl -X 'POST' \
 - Abre o crea visits.json.
 - Agrega un nuevo registro con la fecha y hora actuales.
 
-3. ## POST http://localhost:5116/api/FaceRecognition/check-and-register
-📸 Descripción:
-Captura una imagen desde la cámara conectada, verifica si el rostro ya está registrado en Amazon Rekognition y lo registra si es nuevo. Sin importar si ya visitó en las últimas 24 horas, guarda el registro de la visita en el archivo visits.json.
-
-📥 Parámetros:
-*Ninguno*
-
-📤 Ejemplo de uso:
-
- ```bash
-curl -X 'POST' \
-  'http://localhost:5116/api/FaceRecognition/check-and-register' \
-  -H 'accept: */*' \
-  -d ''
-
-```
-✅ Respuesta si es la primera vez que vistia esa persona en las pasadas 24 h:
-
- ```json
-{
-  "allowed": true,
-  "face_id": "abcd1234-face-id",
-  "external_image_id": "user123",
- "visits_count": 1,
-  "registered": true
-}
-```
-✅ Respuesta si la persona ha visitado en las pasadas 24 h:
-
- ```json
-{
-  "allowed": false,
-  "face_id": "abcd1234-face-id",
-  "external_image_id": "user123",
-  "visits_count": 2, //Numero mayor a 1
-  "registered": true
-}
-```
-❌ Respuesta si no se detecta rostro o ocurre error:
-
- ```json
-{
-  "allowed": false,
-  "message": "No face detected."
-}
-```
-⚙️ Qué hace internamente:
-- Captura y guarda una imagen desde la cámara.
-- Utiliza AWS Rekognition para verificar si el rostro ya existe.
-- Si no existe, lo registra.
-- Agrega un nuevo registro de visita en visits.json con la fecha y hora actual.
-- Indica si el rostro había visitado en las últimas 24 horas.
-
-4. ## GET http://localhost:5116/api/FaceRecognition/visits-on-date
-📝 Descripción:
-Elimina todos los registros de visita del archivo visits.json.Devuelve el número de visitantes únicos que han sido registrados en una fecha específica (por defecto, hoy). Se cuentan como únicos por FaceId y ExternalImageId.
-
-📥 Parámetros:
-- *date* (opcional): Fecha a consultar en formato YYYY-MM-DD. Si no se proporciona, se usa la fecha actual del servidor.
-📤 Ejemplo de uso:
-
- ```bash
-curl -X 'GET' \
-  'http://localhost:5116/api/FaceRecognition/visits-on-date?date=2025-07-02' \
-  -H 'accept: */*'
  ```
 ✅ Respuesta exitosa:
 
  ```json
-  {
-    "success": true,
-    "total_visits": 5,
-    "unique_visitors": 2,
-    "details": [
-      {
-        "face_id": "abc123",
-        "external_image_id": "user1",
-        "visit_count": 3
-      },
-      {
-        "face_id": "xyz789",
-        "external_image_id": "user2",
-        "visit_count": 2
-      }
-    ]
-  }
-
- ```
-❌ Respuesta si no hay registros para la fecha:
-
- ```json
-  {
-    "success": true,
-    "count": 0,
-    "message": "No visits found for the specified date.",
-    "date": "2025-07-02"
-  }
-
- ```
-❌ Errores posibles:
-
- ```json
-  {
-    "success": false,
-    "message": "visists.json file not found."
-  }
-```
-
-⚙️ Qué hace internamente:
-- Verifica si existe el archivo visits.json.
-- Filtra todas las visitas del día indicado.
-- Agrupa por FaceId y ExternalImageId para obtener visitantes únicos y sus frecuencias.
-- Devuelve:
-  - *total_visits*: número total de registros encontrados en esa fecha.
-  - *unique_visitors*: cantidad de personas distintas.
-  - *details*: lista de cada persona con su número de visitas.
-  
-5.  ## GET http://localhost:5116/api/FaceRecognition/get-all-visits
-📝 Descripción:
-Devuelve todas las visitas registradas en el archivo visits.json, sin importar la fecha. Útil para obtener el historial completo.
-
-📥 Parámetros:
- *Ninguno*.
-📤 Ejemplo de uso:
-
- ```bash
-curl -X 'GET' \
-  'http://localhost:5116/api/FaceRecognition/get-all-visits' \
-  -H 'accept: */*'
- ```
-✅ Respuesta exitosa:
-
- ```json
-  {
-    "success": true,
-    "count": 4,
-    "visits": [
-      {
-        "faceId": "abc123",
-        "externalImageId": "user1",
-        "timestamp": "2025-07-01T10:12:00"
-      },
-      {
-        "faceId": "xyz789",
-        "externalImageId": "user2",
-        "timestamp": "2025-07-01T12:45:00"
-      },
-      ...
-    ]
-  }
-
- ```
-✅ Respuesta  si no hay visitas:
-
- ```json
-  {
-  "success": true,
-  "count": 0,
-  "message": "No visits recorded"
-}
- ```
-
-❌ Errores posibles:
-
- ```json
-  {
-    "success": false,
-    "message": "visits.json file not found."
-  }
-
-```
-
-⚙️ Qué hace internamente:
-- Verifica si existe el archivo visits.json.
-- Si existe, lo deserializa y devuelve la lista completa de visitas.
-- Si no hay visitas o el archivo está vacío, devuelve un mensaje informativo con count = 0
-
-
-6. ## DELETE http://localhost:5116/api/FaceRecognition/delete-last-visit
-📝 Descripción:
-Elimina el último registro almacenado en el archivo visits.json. Útil para pruebas o corrección de errores.
-
-📥 Parámetros:
-*Ninguno*
-📤 Ejemplo de uso:
-
- ```bash
-curl -X 'DELETE' \
-  'http://localhost:5116/api/FaceRecognition/delete-last-visit' \
-  -H 'accept: */*'
-
- ```
-✅ Respuesta:
-
- ```json
-{
-  "success": true
-}
- ```
-❌ Errores posibles:
- - Si el archivo no existe:
- ```json
-  {
-    "success": false,
-    "message": "visits.json file not found."
-  }
-```
-
- - Si no hay visitas para eliminar:
-
- ```json
-  {
-    "success": false,
-    "message": "No visits to delete."
-  }
-
-```
-
-⚙️ Qué hace internamente:
-- Carga el archivo visits.json.
-- Si existen visitas registradas, elimina la última.
-- Guarda el nuevo contenido en el mismo archivo
-
-
-
-7. ## DELETE http://localhost:5116/api/FaceRecognition/delete-visits-on-date
-📝 Descripción:
-Elimina todos los registros de visita correspondientes a una fecha específica (o a la fecha actual si no se indica).
-
-📥 Parámetros:
-- *date* (opcional): Fecha a consultar en formato YYYY-MM-DD. Si no se proporciona, se usa la fecha actual del servidor.
-📤 Ejemplo de uso:
-
- ```bash
-curl -X 'DELETE' \
-  'http://localhost:5116/api/FaceRecognition/delete-visits-on-date?date=2025-07-02' \
-  -H 'accept: */*'
- ```
-✅ Respuesta exitosa:
-
- ```json
- {
-    "success": true,
-    "deleted": 5,
-    "date": "2025-07-02"
-  }
-
- ```
-❌ Errores posibles:
- - Si no hay visitas:
- ```json
-  {
-    "success": true,
-    "deleted": 0,
-    "message": "No visits to delete."
-  }
-```
- - Si no existe el archivo::
-
- ```json
-  {
-    "success": false,
-    "message": "visits.json file not found."
-  }
-```
-
-⚙️ Qué hace internamente:
-- Carga todas las visitas desde visits.json.
-- Elimina las que coinciden con la fecha especificada.
-- Sobrescribe el archivo con las visitas restantes.
-
-8. ## DELETE http://localhost:5116/api/FaceRecognition/delete-all-visits
-📝 Descripción:
-Elimina todos los registros de visita del archivo visits.json.
-
-📥 Parámetros:
-*Ninguno* 
-📤 Ejemplo de uso:
-
- ```bash
-curl -X 'DELETE' \
-  curl -X 'DELETE' \
-  'http://localhost:5116/api/FaceRecognition/delete-all-visits' \
-  -H 'accept: */*'
-
- ```
-✅ Respuesta exitosa:
-
- ```json
-  {
-    "success": true,
-    "message": "Todos los registros de visitas han sido eliminados."
-  }
-
-
- ```
-❌ Errores posibles:
-
- ```json
-  {
-    "success": false,
-    "message": "visits.json file not found."
-  }
-
-```
-
-⚙️ Qué hace internamente:
-- Verifica si existe el archivo visits.json.
-- Si existe, lo sobrescribe con una lista vacía ([]).
+<

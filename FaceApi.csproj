@@ -8,7 +8,9 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.Rekognition" Version="4.0.1.6" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.4.1" />
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="4.13.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
