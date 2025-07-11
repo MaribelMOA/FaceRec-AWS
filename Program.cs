@@ -7,8 +7,8 @@ DotNetEnv.Env.Load();
 // Habilita controladores
 builder.Services.AddControllers();
 builder.Services.AddSingleton<CameraService>();
-//builder.Services.AddSingleton<IStorageService, S3StorageService>();
-builder.Services.AddSingleton<IStorageService, GcStorageService>();
+builder.Services.AddSingleton<IStorageService, S3StorageService>();
+//builder.Services.AddSingleton<IStorageService, GcStorageService>();
 
 builder.Services.AddEndpointsApiExplorer();
 
