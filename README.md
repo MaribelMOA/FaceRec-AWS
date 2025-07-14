@@ -266,7 +266,118 @@ Elimina el archivo temp-images/{tempFileName} de disco.
  ```json
   { "success": true, "message": "Temp image deleted successfully" }
  ```
-5. ## GET http://localhost:5116/api/FaceRecognition/get-image?fileName={fileName} 
+---
+## RUTAS PARA CEHCAR CAMARA Y AWS
+5. ## GET http://localhost:5116/api/FaceRecognition/check-camera 
+🎥 Descripción:
+Verifica si la cámara del servidor está disponible para capturar imágenes.
+
+📥 Parámetros:
+ *Ninguno*.
+
+📤 Ejemplo de uso con cURL:
+
+ ```bash
+  curl -X 'GET' \
+    'http://localhost:5116/api/FaceRecognition/check-camera' \
+    -H 'accept: */*'
+ ```
+✅ Respuesta si la cámara está disponible:
+
+ ```json
+  {
+    "success": true,
+    "message": "Camara Available"
+  }
+ ```
+
+❌ Respuesta si la cámara no está disponible:
+
+ ```json
+  {
+    "success": false,
+    "message": "Camara Unavailable."
+  }
+ ```
+6. ## GET http://localhost:5116/api/FaceRecognition/check-aws 
+☁️ Descripción:
+Verifica si la conexión con AWS Rekognition es válida realizando una llamada a ListCollections.
+
+📥 Parámetros:
+ *Ninguno*.
+
+📤 Ejemplo de uso con cURL:
+
+ ```bash
+  curl -X 'GET' \
+    'http://localhost:5116/api/FaceRecognition/check-aws' \
+    -H 'accept: */*'
+ ```
+✅ Respuesta si AWS está accesible:
+
+ ```json
+  {
+    "success": true,
+    "message": "AWS Rekognition conecction successful."
+  }
+ ```
+
+❌ Respuesta si AWS no responde correctamente:
+
+ ```json
+  {
+  "success": false,
+  "message": "Unable to connect to AWS Rekognition. <detalle del error>"
+}
+ ```
+7. ## GET http://localhost:5116/api/FaceRecognition/health 
+ Descripción:
+Revisión general del estado de la cámara y AWS Rekognition.
+
+📥 Parámetros:
+ *Ninguno*.
+
+📤 Ejemplo de uso con cURL:
+
+ ```bash
+    curl -X 'GET' \
+    'http://localhost:5116/api/FaceRecognition/health' \
+    -H 'accept: */*'
+ ```
+✅ Respuesta si todo está bien:
+
+ ```json
+  {
+    "camera_ok": true,
+    "aws_ok": true,
+    "aws_message": "Conection succesful. 1 colection(s) detected.",
+    "timestamp": "2025-07-10T18:39:20.452Z"
+  }
+
+ ```
+
+❌ Respuesta si AWS no responde correctamente:
+
+ ```json
+  {
+  {
+    "camera_ok": false,
+    "aws_ok": false,
+    "aws_message": "The security token included in the request is invalid.",
+    "timestamp": "2025-07-10T18:39:20.452Z"
+  }
+ ```
+⚙️ Qué hace internamente:
+- Chequea disponibilidad de cámara con CameraService.IsAvailable.
+- Intenta acceder a AWS Rekognition.
+- Retorna resumen con estatus de ambos servicios y hora actual (UTC).
+
+
+
+---
+## RUTAS DE COSNULTA
+
+8. ## GET http://localhost:5116/api/FaceRecognition/get-image?fileName={fileName} 
  Descripción:
   ¿Qué hace internamente?
     1. Si fileName contiene .jpg y _, lo usa directamente como clave S3 visitas/{fileName}.
@@ -301,7 +412,7 @@ curl -X GET \
  ```json
   { "success": false, "message": "No image found with that name." }
  ```
-6. ## DELETE http://localhost:5116/api/FaceRecognition/delete-image/{fileName} 
+9. ## DELETE http://localhost:5116/api/FaceRecognition/delete-image/{fileName} 
  Descripción:
   ¿Qué hace internamente?
     1. Igual que get-image, resuelve la clave S3.
@@ -335,7 +446,7 @@ curl -X DELETE \
   { "success": false, "message": "No se pudo borrar el archivo o no existe." }
  ```
 
-7. ## GET http://localhost:5116/api/FaceRecognition/images-by-date?date={yyyyMMdd}
+10. ## GET http://localhost:5116/api/FaceRecognition/images-by-date?date={yyyyMMdd}
  Descripción:
   ¿Qué hace internamente?
     1. Lista con ListObjectsV2 todos los objetos bajo visitas/.
