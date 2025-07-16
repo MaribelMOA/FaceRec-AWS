@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using OpenCvSharp;
 using System.Text.Json;
 
-using Amazon.S3;
-using Amazon.S3.Model;
+// using Amazon.S3;
+// using Amazon.S3.Model;
 
 using FaceApi.Models;
 using FaceApi.Services;
@@ -205,7 +205,7 @@ public class FaceRecognitionController : ControllerBase
             return NotFound(new { success = true, message = "Temp image deleted succesfully" });
         }
     }
-
+///RUTAS PARA CONSULTAS Y ESO
 
         //5
     [HttpGet("get-image")]
@@ -297,6 +297,83 @@ public class FaceRecognitionController : ControllerBase
 
         return Ok(new { success = true, count = urls.Count, images = urls });
     }
+    
+    ///RUTAS PARA CHECAR CAMARA Y AWS
+
+    //8
+
+    [HttpGet("check-camera")]
+    public IActionResult CheckCamera()
+    {
+        if (_cameraService.IsAvailable)
+        {
+            return Ok(new { success = true, message = "Camara Available" });
+        }
+        else
+        {
+            return StatusCode(503, new { success = false, message = "Camara Unavailable." });
+        }
+    }
+
+    //9
+    [HttpGet("check-aws")]
+    public async Task<IActionResult> CheckAWS()
+    {
+        try
+        {
+            var response = await _rekClient.ListCollectionsAsync(new ListCollectionsRequest());
+            return Ok(new
+            {
+                success = true,
+                message = "AWS Rekognition conecction successful. ",
+               // collections_count = response.CollectionIds.Count
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(503, new
+            {
+                success = false,
+                message = "Unable to conect to AWS Rekognition."+ex.Message,
+               // error = ex.Message
+            });
+        }
+    }
+
+    //10
+    [HttpGet("health")]
+    public async Task<IActionResult> HealthCheck()
+    {
+        // Estado de la cámara
+        bool cameraOk = _cameraService.IsAvailable;
+
+        // Estado de AWS Rekognition
+        bool awsOk = false;
+        string awsMessage = "";
+
+        try
+        {
+            var response = await _rekClient.ListCollectionsAsync(new ListCollectionsRequest());
+            awsOk = true;
+            awsMessage = $"Conection succesful. {response.CollectionIds.Count} coletion(s) detected.";
+        }
+        catch (Exception ex)
+        {
+            awsOk = false;
+            awsMessage = ex.Message;
+        }
+
+        return Ok(new
+        {
+            camera_ok = cameraOk,
+            aws_ok = awsOk,
+            aws_message = awsMessage,
+            timestamp = DateTime.UtcNow
+        });
+    }
+
+
+
 
 
 
@@ -307,7 +384,7 @@ public class FaceRecognitionController : ControllerBase
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
-//NO LONGER IMPORTANT, BUT LEFT JUST IN CASE
+    //NO LONGER IMPORTANT, BUT LEFT JUST IN CASE
 
 
     //3
