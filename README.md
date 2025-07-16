@@ -489,3 +489,4 @@ curl -X GET \
   { "success": false, "message": "No se encontraron imágenes para esa fecha." }
 
  ```
+
