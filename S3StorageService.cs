@@ -2,7 +2,9 @@ using Amazon.S3;
 using Amazon.S3.Transfer;
 using Microsoft.Extensions.Configuration;
 using Amazon.S3.Model;
-public class S3StorageService: IStorageService
+
+
+public class S3StorageService : IStorageService
 {
     private readonly IAmazonS3 _s3Client;
     private readonly string _bucketName;
@@ -10,7 +12,7 @@ public class S3StorageService: IStorageService
     public S3StorageService(IConfiguration configuration)
     {
         _bucketName = Environment.GetEnvironmentVariable("BUCKET_AWS");
-       
+
         var accessKey = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY");
         var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_KEY");
 
@@ -21,7 +23,7 @@ public class S3StorageService: IStorageService
         );
     }
 
-     public async Task<string> UploadFileAsync(string localFilePath, string keyName)
+    public async Task<string> UploadFileAsync(string localFilePath, string keyName)
     {
         var fileTransferUtility = new TransferUtility(_s3Client);
         await fileTransferUtility.UploadAsync(localFilePath, _bucketName, keyName);
@@ -65,7 +67,7 @@ public class S3StorageService: IStorageService
         // return _s3Client.GetPreSignedURL(request);
     }
 
- 
+
 
     public async Task<string?> FindFileByPrefixAsync(string prefix)
     {
@@ -96,7 +98,7 @@ public class S3StorageService: IStorageService
             //     Key = keyName
             // };
 
-          //  await _s3Client.GetObjectMetadataAsync(metadataRequest); // lanza excepción si no existe
+            //  await _s3Client.GetObjectMetadataAsync(metadataRequest); // lanza excepción si no existe
 
             // Si existe, procedemos a eliminarlo
             var deleteRequest = new DeleteObjectRequest

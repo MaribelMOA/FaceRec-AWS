@@ -25,7 +25,6 @@ namespace FaceApi.Services
             _faceCascade = new CascadeClassifier("haarcascade-frontalface-default.xml");
         }
 
-        // public Mat? CaptureFace()
         public CameraCaptureResult CaptureFace()
         {
             lock (_lock)
